@@ -1,5 +1,7 @@
 # Complex Flag Unmarshalling Helper
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/dihedron/complexflag)](https://goreportcard.com/report/github.com/dihedron/complexflag)
+
 This library provides a facility to unmarshal complex flags from both inline and on-disk values, in JSON and YAML formats.
 
 It is meant to be used alongside Jesse van den Keiboom's [Flags library](https://github.com/jessevdk/go-flags) to simplify the unmarshalling of values into Golang structs and arrays.
