@@ -1,4 +1,4 @@
-# Flexible unmarshalling of value sComplex Flag Unmarshalling Helper
+# Flexible unmarshalling of values into Golang objects
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/dihedron/unknown)](https://goreportcard.com/report/github.com/dihedron/unknown)
 [![Godoc](https://godoc.org/github.com/dihedron/unknown?status.svg)](https://godoc.org/github.com/dihedron/unknown)
@@ -7,14 +7,14 @@ This library provides a facility to unmarshal unknown values from both inline an
 
 It can be used wherever an input must be unmarshalled into a Golang object.
 
-## Using with https://github.com/jessevdk/go-flags
+## Using for command line flags
 
 One such use is alongside Jesse van den Keiboom's [Flags library](https://github.com/jessevdk/go-flags), to simplify the unmarshalling of values into Golang structs and arrays.
 
 ```golang
 type MyCommand struct {
-    Param1     CustomFlagType1   `short:"p" long:"param1" description:"An input parameter, either as an inline value or as a @file (in JSON or YAML format)."`
-    Param2     CustomFlagType2   `short:"q" long:"param2" description:"A partially deserialised input parameter, either as an inline value or as a @file (in JSON or YAML format)."`
+    Param1     CustomFlagType1  `short:"p" long:"param1" description:"An input parameter, either as an inline value or as a @file (in JSON or YAML format)."`
+    Param2     CustomFlagType2  `short:"q" long:"param2" description:"A partially deserialised input parameter, either as an inline value or as a @file (in JSON or YAML format)."`
 }
 
 type CustomFlagType1 struct {
