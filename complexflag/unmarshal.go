@@ -71,7 +71,7 @@ func UnmarshalInto(value string, target interface{}) error {
 }
 
 func readContent(value string) (Format, []byte, error) {
-	format := FormatUnknown
+	var format Format
 	var content []byte
 	if strings.HasPrefix(value, "@") {
 		// it's a file on disk, check it exist
