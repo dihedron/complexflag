@@ -1,6 +1,7 @@
 # Flexible unmarshalling of value sComplex Flag Unmarshalling Helper
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/dihedron/complexflag)](https://goreportcard.com/report/github.com/dihedron/complexflag)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dihedron/unknown)](https://goreportcard.com/report/github.com/dihedron/unknown)
+[![Godoc](https://godoc.org/github.com/dihedron/unknown?status.svg)](https://godoc.org/github.com/dihedron/unknown)
 
 This library provides a facility to unmarshal unknown values from both inline and on-disk values, in either JSON or YAML formats.
 
