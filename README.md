@@ -17,7 +17,7 @@ type CustomFlagType1 struct {
 }
 
 func (c *CustomFlagType1) UnmarshalFlag(value string) error {
-	return complexflag.UnmarshalInto(value, c)
+    return complexflag.UnmarshalInto(value, c)
 }
 
 ```
@@ -30,8 +30,8 @@ type CustomFlagType2 struct {
 }
 
 func (c *CustomFlagType2) UnmarshalFlag(value string) error {
-	var err error
-	data, err = complexflag.Unmarshal(value)
+    var err error
+    data, err = complexflag.Unmarshal(value)
     // after this call, data may contain a map[string]interface{} 
     // or a []interface{}, depending on whether the input is a 
     // JSON/YAML object; you can hook your custom unmarshalling 
@@ -44,7 +44,7 @@ func (c *CustomFlagType2) UnmarshalFlag(value string) error {
             // ...
         }
     }
-	return err
+    return err
 }
 
 ```
