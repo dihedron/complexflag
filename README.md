@@ -36,8 +36,8 @@ func (c *CustomFlagType2) UnmarshalFlag(value string) error {
     data, err = complexflag.Unmarshal(value)
     // after this call, data may contain a map[string]interface{} 
     // or a []interface{}, depending on whether the input is a 
-    // JSON/YAML object; you can hook your custom unmarshalling 
-    // logic here
+    // JSON/YAML object or an array; you can hook your custom 
+    // unmarshalling logic here
     if t, ok := data["type"].(string); ok {
         switch(t) {
         case "foo":
