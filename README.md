@@ -6,7 +6,7 @@ It is meant to be used alongside Jesse van den Keiboom's [Flags library](https:/
 
 ```golang
 type MyCommand struct {
-	Param1     CustomFlagType1   `short:"p" long:"param1" description:"An input parameter, either as an inline value or as a @file (in JSON or YAML format)."`
+    Param1     CustomFlagType1   `short:"p" long:"param1" description:"An input parameter, either as an inline value or as a @file (in JSON or YAML format)."`
     Param2     CustomFlagType2   `short:"q" long:"param2" description:"A partially deserialised input parameter, either as an inline value or as a @file (in JSON or YAML format)."`
 }
 
@@ -26,7 +26,7 @@ The library provides support also for those cases where the exact type of the in
 
 ```golang
 type CustomFlagType2 struct {
-	// ...
+    // ...
 }
 
 func (c *CustomFlagType2) UnmarshalFlag(value string) error {
