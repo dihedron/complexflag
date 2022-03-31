@@ -16,8 +16,10 @@ import (
 type Format uint8
 
 const (
+	// FormatUnknown indicates that the format could not be determined.
+	FormatUnknown Format = iota
 	// FormatJSON indicates that the flag is in JSON format.
-	FormatJSON Format = iota
+	FormatJSON
 	// FormatYAML indicates that the flag is in YAML format.
 	FormatYAML
 )
@@ -30,45 +32,10 @@ const (
 // inline representation (in which case it MUST start with '---') or
 // and inline JSON representation and is unmarshalled acoordingly.
 func Unmarshal(value string) (interface{}, error) {
-	format := FormatJSON
-	var content []byte
-	if strings.HasPrefix(value, "@") {
-		// it's a file on disk, check it exist
-		filename := strings.TrimPrefix(value, "@")
-		info, err := os.Stat(filename)
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file '%s' does not exist: %w", filename, err)
-		}
-		if info.IsDir() {
-			return nil, fmt.Errorf("'%s' is a directory, not a file", filename)
-		}
-		// read into memory
-		content, err = ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, fmt.Errorf("error reading file '%s': %w", filename, err)
-		}
-		// type detection is based on file extension
-		ext := path.Ext(filename)
-		switch strings.ToLower(ext) {
-		case ".yaml", ".yml":
-			format = FormatYAML
-		case ".json":
-			format = FormatJSON
-		default:
-			return nil, fmt.Errorf("unsupported data format in file: %s", path.Ext(filename))
-		}
-	} else {
-		// not a file, type detection is based on the data
-		value = strings.TrimSpace(value)
-		content = []byte(value)
-		if strings.HasPrefix(value, "---") {
-			format = FormatYAML
-		} else if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
-			// TODO: we could optimise by recording whether it's a struct or an array
-			format = FormatJSON
-		} else {
-			return nil, fmt.Errorf("unrecognisable input format in inline data")
-		}
+	// read data and detect its format
+	format, content, err := read(value)
+	if err != nil {
+		return nil, err
 	}
 	// now depending on the format, unmarshal to JSON or YAML
 	switch format {
@@ -123,47 +90,11 @@ func Unmarshal(value string) (interface{}, error) {
 }
 
 func UnmarshalInto(value string, target interface{}) error {
-	format := FormatJSON
-	var content []byte
-	if strings.HasPrefix(value, "@") {
-		// it's a file on disk, check it exist
-		filename := strings.TrimPrefix(value, "@")
-		info, err := os.Stat(filename)
-		if os.IsNotExist(err) {
-			return fmt.Errorf("file '%s' does not exist: %w", filename, err)
-		}
-		if info.IsDir() {
-			return fmt.Errorf("'%s' is a directory, not a file", filename)
-		}
-		// read into memory
-		content, err = ioutil.ReadFile(filename)
-		if err != nil {
-			return fmt.Errorf("error reading file '%s': %w", filename, err)
-		}
-		// type detection is based on file extension
-		ext := path.Ext(filename)
-		switch strings.ToLower(ext) {
-		case ".yaml", ".yml":
-			format = FormatYAML
-		case ".json":
-			format = FormatJSON
-		default:
-			return fmt.Errorf("unsupported data format in file: %s", path.Ext(filename))
-		}
-	} else {
-		// not a file, type detection is based on the data
-		value = strings.TrimSpace(value)
-		content = []byte(value)
-		if strings.HasPrefix(value, "---") {
-			format = FormatYAML
-		} else if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
-			// TODO: we could optimise by recording whether it's a struct or an array
-			format = FormatJSON
-		} else {
-			return fmt.Errorf("unrecognisable input format in inline data")
-		}
-	}
-	// now depending on the format, unmarshal to JSON or YAML
+	// read data and detect its format
+	format, content, err := read(value)
+	if err != nil {
+		return err
+	} // now depending on the format, unmarshal to JSON or YAML
 	switch format {
 	case FormatJSON:
 		if err := json.Unmarshal(content, target); err != nil {
@@ -178,4 +109,48 @@ func UnmarshalInto(value string, target interface{}) error {
 	default:
 		return fmt.Errorf("unsupported encoding: %v", format)
 	}
+}
+
+func read(value string) (Format, []byte, error) {
+	format := FormatUnknown
+	var content []byte
+	if strings.HasPrefix(value, "@") {
+		// it's a file on disk, check it exist
+		filename := strings.TrimPrefix(value, "@")
+		info, err := os.Stat(filename)
+		if os.IsNotExist(err) {
+			return format, nil, fmt.Errorf("file '%s' does not exist: %w", filename, err)
+		}
+		if info.IsDir() {
+			return format, nil, fmt.Errorf("'%s' is a directory, not a file", filename)
+		}
+		// read into memory
+		content, err = ioutil.ReadFile(filename)
+		if err != nil {
+			return format, nil, fmt.Errorf("error reading file '%s': %w", filename, err)
+		}
+		// type detection is based on file extension
+		ext := path.Ext(filename)
+		switch strings.ToLower(ext) {
+		case ".yaml", ".yml":
+			format = FormatYAML
+		case ".json":
+			format = FormatJSON
+		default:
+			return format, nil, fmt.Errorf("unsupported data format in file: %s", path.Ext(filename))
+		}
+	} else {
+		// not a file, type detection is based on the data
+		value = strings.TrimSpace(value)
+		content = []byte(value)
+		if strings.HasPrefix(value, "---") {
+			format = FormatYAML
+		} else if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
+			// TODO: we could optimise by recording whether it's a struct or an array
+			format = FormatJSON
+		} else {
+			return format, nil, fmt.Errorf("unrecognisable input format in inline data")
+		}
+	}
+	return format, content, nil
 }
