@@ -1,4 +1,4 @@
-package complexflag
+package unknown
 
 import (
 	"encoding/json"
@@ -24,13 +24,13 @@ const (
 	FormatYAML
 )
 
-// Unmarshal unmarshals a complex command line flag into an argument;
-// if the command line argument starts with a '@' it is assumed to
-// be a file on the local filesystem, it is read into memory and then
-// unmarshalled into the object struct, which must be appropriately
-// annotated; if it does not start with '@', it can be either a YAML
-// inline representation (in which case it MUST start with '---') or
-// and inline JSON representation and is unmarshalled acoordingly.
+// Unmarshal unmarshals a complex value into an object; if the value
+// starts with a '@' it is assumed to be a file on the local filesystem,
+// it is read into memory and then unmarshalled into a generic map or
+// array depending on the contents; if it does not start with '@', it
+// can be either a YAML inline representation (in which case it MUST
+// start with '---') or an inline JSON representation and is unmarshalled
+// accordingly.
 func Unmarshal(value string) (interface{}, error) {
 	// read data and detect its format
 	format, content, err := readContent(value)
@@ -48,6 +48,10 @@ func Unmarshal(value string) (interface{}, error) {
 	}
 }
 
+// UnmarshalInto is a more type-contrained version of Unmarshal: it requires
+// the output object (either a struct or an array) to passed in as a pointer.
+// The input value can either be an inline JSON/YAM value, or a reference to
+// a file (e.g. '@myfile.json') in JSON/YAML format.
 func UnmarshalInto(value string, target interface{}) error {
 	// read data and detect its format
 	format, content, err := readContent(value)

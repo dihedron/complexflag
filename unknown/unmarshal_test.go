@@ -1,4 +1,4 @@
-package complexflag
+package unknown
 
 import "testing"
 

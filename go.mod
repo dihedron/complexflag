@@ -1,4 +1,4 @@
-module github.com/dihedron/complexflag
+module github.com/dihedron/unknown
 
 go 1.17
 
