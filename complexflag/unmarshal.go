@@ -33,57 +33,16 @@ const (
 // and inline JSON representation and is unmarshalled acoordingly.
 func Unmarshal(value string) (interface{}, error) {
 	// read data and detect its format
-	format, content, err := read(value)
+	format, content, err := readContent(value)
 	if err != nil {
 		return nil, err
 	}
 	// now depending on the format, unmarshal to JSON or YAML
 	switch format {
 	case FormatJSON:
-		// NOTE: a JSON document can represent either an object or an array
-		// bot the standard library methods expect the target object to be
-		// pre-allocated; thus, we try to unmarshal to a map, which is the
-		// most general representation of a struct; if it fails with a parse
-		// error because the JSON document represents an array, we try with
-		// an array next
-
-		// first attempt: unmarshalling to a map (like a struct would)...
-		m := map[string]interface{}{}
-		if err := json.Unmarshal(content, &m); err != nil {
-			if err, ok := err.(*json.UnmarshalTypeError); ok {
-				if err.Value == "array" && err.Offset == 1 {
-					// second attempt: it is not a struct, it's an array, let's try that...
-					a := []interface{}{}
-					if err := yaml.Unmarshal(content, &a); err != nil {
-						return nil, fmt.Errorf("error unmarshalling from JSON: %w", err)
-					}
-					return a, nil
-				}
-			}
-			return nil, fmt.Errorf("error unmarshalling from JSON: %w", err)
-		}
-		return m, nil
+		return unmarshalJSON(content)
 	case FormatYAML:
-		object := map[string]interface{}{}
-		if err := yaml.Unmarshal(content, object); err != nil {
-			if err, ok := err.(*yaml.TypeError); ok {
-				// TODO: find a way to circumvent marshalling error in case of array
-				for _, e := range err.Errors {
-					if strings.HasSuffix(e, "cannot unmarshal !!seq into map[string]interface {}") {
-						// second attempt: it is not a struct, it's an array, let's try that...
-						a := []interface{}{}
-						if err := yaml.Unmarshal(content, &a); err != nil {
-							return nil, fmt.Errorf("error unmarshalling from YAML: %w", err)
-						}
-						return a, nil
-					}
-				}
-				return nil, fmt.Errorf("error: %s, %+v", err.Error(), err.Errors)
-			}
-			return nil, fmt.Errorf("error unmarshalling from YAML: %w (%T)", err, err)
-
-		}
-		return object, nil
+		return unmarshalYAML(content)
 	default:
 		return nil, fmt.Errorf("unsupported encoding: %v", format)
 	}
@@ -91,7 +50,7 @@ func Unmarshal(value string) (interface{}, error) {
 
 func UnmarshalInto(value string, target interface{}) error {
 	// read data and detect its format
-	format, content, err := read(value)
+	format, content, err := readContent(value)
 	if err != nil {
 		return err
 	} // now depending on the format, unmarshal to JSON or YAML
@@ -111,7 +70,7 @@ func UnmarshalInto(value string, target interface{}) error {
 	}
 }
 
-func read(value string) (Format, []byte, error) {
+func readContent(value string) (Format, []byte, error) {
 	format := FormatUnknown
 	var content []byte
 	if strings.HasPrefix(value, "@") {
@@ -153,4 +112,57 @@ func read(value string) (Format, []byte, error) {
 		}
 	}
 	return format, content, nil
+}
+
+// unmarshalJSON unmarshals a JSON document; a JSON document can
+// represent either an object or an array but the standard library
+// methods expect the target object to be pre-allocated; thus, we
+// try to unmarshal to a map, which is the most general representation
+// of a struct; if it fails with a parse error because the JSON document
+// represents an array, we try with an array next.
+func unmarshalJSON(content []byte) (interface{}, error) {
+	// first attempt: unmarshalling to a map (like a struct would)...
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(content, &m); err != nil {
+		if err, ok := err.(*json.UnmarshalTypeError); ok {
+			if err.Value == "array" && err.Offset == 1 {
+				// second attempt: it is not a struct, it's an array, let's try that...
+				a := []interface{}{}
+				if err := yaml.Unmarshal(content, &a); err != nil {
+					return nil, fmt.Errorf("error unmarshalling from JSON: %w", err)
+				}
+				return a, nil
+			}
+		}
+		return nil, fmt.Errorf("error unmarshalling from JSON: %w", err)
+	}
+	return m, nil
+}
+
+// unmarshalYAML unmarshals a YAML document; a YAML document can
+// represent either an object or an array but the YAML library
+// methods expect the target object to be pre-allocated; thus, we
+// try to unmarshal to a map, which is the most general representation
+// of a struct; if it fails with a parse error because the YAML document
+// represents an array, we try with an array next.
+func unmarshalYAML(content []byte) (interface{}, error) {
+	object := map[string]interface{}{}
+	if err := yaml.Unmarshal(content, object); err != nil {
+		if err, ok := err.(*yaml.TypeError); ok {
+			// TODO: find a way to circumvent marshalling error in case of array
+			for _, e := range err.Errors {
+				if strings.HasSuffix(e, "cannot unmarshal !!seq into map[string]interface {}") {
+					// second attempt: it is not a struct, it's an array, let's try that...
+					a := []interface{}{}
+					if err := yaml.Unmarshal(content, &a); err != nil {
+						return nil, fmt.Errorf("error unmarshalling from YAML: %w", err)
+					}
+					return a, nil
+				}
+			}
+			return nil, fmt.Errorf("error: %s, %+v", err.Error(), err.Errors)
+		}
+		return nil, fmt.Errorf("error unmarshalling from YAML: %w (%T)", err, err)
+	}
+	return object, nil
 }
