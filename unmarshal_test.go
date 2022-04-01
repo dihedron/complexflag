@@ -14,7 +14,6 @@ func TestUnmarshalNonExistingFile(t *testing.T) {
 		if err == nil {
 			t.Fatal("no error on non-existing file")
 		}
-		t.Logf("error: %v", err)
 	}
 }
 
@@ -63,7 +62,6 @@ func TestUnmarshalIntoNonExistingFile(t *testing.T) {
 		if err == nil {
 			t.Fatal("no error on non-existing file")
 		}
-		t.Logf("error: %v", err)
 	}
 }
 
