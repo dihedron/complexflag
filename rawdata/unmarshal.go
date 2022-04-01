@@ -1,4 +1,4 @@
-package unknown
+package rawdata
 
 import (
 	"encoding/json"
@@ -132,7 +132,7 @@ func unmarshalJSON(content []byte) (interface{}, error) {
 			if err.Value == "array" && err.Offset == 1 {
 				// second attempt: it is not a struct, it's an array, let's try that...
 				a := []interface{}{}
-				if err := yaml.Unmarshal(content, &a); err != nil {
+				if err := json.Unmarshal(content, &a); err != nil {
 					return nil, fmt.Errorf("error unmarshalling from JSON: %w", err)
 				}
 				return a, nil

@@ -1,15 +1,34 @@
 # Flexible unmarshalling of values into Golang objects
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/dihedron/unknown)](https://goreportcard.com/report/github.com/dihedron/unknown)
-[![Godoc](https://godoc.org/github.com/dihedron/unknown?status.svg)](https://godoc.org/github.com/dihedron/unknown)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dihedron/rawdata)](https://goreportcard.com/report/github.com/dihedron/rawdata)
+[![Godoc](https://godoc.org/github.com/dihedron/rawdata?status.svg)](https://godoc.org/github.com/dihedron/rawdata)
 
 This library provides a facility to unmarshal unknown values from both inline and on-disk values, in either JSON or YAML formats.
 
 It can be used wherever an input must be unmarshalled into a Golang object.
 
-## Using for command line flags
+## Importing the library
 
-One such use is alongside Jesse van den Keiboom's [Flags library](https://github.com/jessevdk/go-flags), to simplify the unmarshalling of values into Golang structs and arrays.
+In order to use the library, import it like this:
+
+```golang
+import (
+    "github.com/dihedron/rawdata"
+)
+```
+
+Then open a command prompt in your project's root directory and run:
+
+```bash
+$> go mod tidy
+```
+
+## Using the library for command line flags
+
+One use case for this library is alongside Jesse van den Keiboom's [Flags library](https://github.com/jessevdk/go-flags), to simplify the unmarshalling of complex command line values into Golang structs and arrays. This provides a simple and elegant way to support complex configurations on the command line.
+
+Let's see the trivial case first, where the library provides the boilerplate code needed to unmarshal a well-known JSON/YAML data structure into a defined Golang struct/array.  
+In this case you would use the `UnmarshalInto` function, which expects a pointer to the destination struct/array to be passed in, so the object and the input value must both be known in advance and match one another. 
 
 ```golang
 type MyCommand struct {
@@ -24,15 +43,14 @@ type CustomFlagType1 struct {
 }
 
 func (c *CustomFlagType1) UnmarshalFlag(value string) error {
-    return unknown.UnmarshalInto(value, c)
+    return rawdata.UnmarshalInto(value, c)
 }
 
 ```
 
-The library provides support also for those cases where the exact type of the input data is not perfectly known in advance, or it may vary depending on e.g. a `type` field.
+The less trivial use case is when the exact type of the input data is not perfectly known in advance or it varies depending on e.g. a `type` field.
 
-Note that the `UnmarshalInto` function expects a pointer to the destination struct/array to be passed in, so the object and the input value must both be known in advance and match one another. 
-The `Unmarshal` function is more lax: it detects the type of entity (object/array) in the input and *returns* either a `map[string]interface{}` (if the input value is an object) or a `[]interface{}` if the input is an array of objects. It is up to the caller to handle the two cases properly, but it leaves the possibility of using e.g. such tools as Mitchell Hashimoto's [Map Structure](https://github.com/mitchellh/mapstructure) library to perform smarter, adaptive staged unmarshalling. 
+In tgis case you can use the `Unmarshal` function, which is more lax with repsect to `UnmarshalInto`: it detects the type of entity (object/array) in the input and *returns* either a `map[string]interface{}` (if the input value is an object) or a `[]interface{}` if the input is an array of objects. It is up to the caller to handle the two cases properly, and this leaves the possibility of using e.g. such tools as Mitchell Hashimoto's [Map Structure](https://github.com/mitchellh/mapstructure) library to perform the final unmarshalling into the destination data structure, possibly with some switching logic. Overall, this provides a way to perform a smarter, adaptive staged unmarshalling where you oartially unmarshall into an intermediate data structure, analyse it and decide what to do next.
 
 ```golang
 type CustomFlagType2 struct {
@@ -41,7 +59,7 @@ type CustomFlagType2 struct {
 
 func (c *CustomFlagType2) UnmarshalFlag(value string) error {
     var err error
-    data, err = complexflag.Unmarshal(value)
+    data, err = rawdata.Unmarshal(value)
     // after this call, data may contain a map[string]interface{} 
     // or a []interface{}, depending on whether the input is a 
     // JSON/YAML object or an array; you can hook your custom 
@@ -66,27 +84,12 @@ func (c *CustomFlagType2) UnmarshalFlag(value string) error {
             }
         }
     case []interface{}:
+        // logic to handle arrays here
 	default:
 		return errors.New("unexpected type of returned data")
 	}    
     return err
 }
 
-```
-
-## Importing the library
-
-In order to use the library, import it like this:
-
-```golang
-import (
-    "github.com/dihedron/unknown"
-)
-```
-
-Then open a command prompt in your project's root directory and run:
-
-```bash
-$> go mod tidy
 ```
 

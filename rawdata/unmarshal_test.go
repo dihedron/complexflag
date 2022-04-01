@@ -1,9 +1,108 @@
-package unknown
+package rawdata
 
 import "testing"
 
+type s struct {
+	Name    string `json:"name"`
+	Surname string `json:"surname"`
+	Age     int    `json:"age"`
+}
+
+func TestUnmarshalNonExistingFile(t *testing.T) {
+	for _, file := range []string{"@./test/nonexisting.json", "@./test/nonexisting.yaml", "@./test/test.toml", "@./test"} {
+		_, err := Unmarshal(file)
+		if err == nil {
+			t.Fatal("no error on non-existing file")
+		}
+		t.Logf("error: %v", err)
+	}
+}
+
+func TestUnmarshalInvalidFile(t *testing.T) {
+	for _, file := range []string{"@./test/invalid.json", "@./test/invalid.yaml"} {
+		_, err := Unmarshal(file)
+		if err == nil {
+			t.Fatal("no error on invalid file")
+		}
+	}
+}
+
+func TestUnmarshalInvalidOrUnrecognisedInline(t *testing.T) {
+	inputs := []string{
+		`
+---
+name: John
+surname: "Doe
+age: 23	
+		`,
+		`
+{
+	"name": "John",
+	"surname": "Doe"
+	"age": 23
+}		`,
+		`
+--
+name: John
+surname: "Doe
+age: 23	
+		`,
+	}
+	for _, input := range inputs {
+		_, err := Unmarshal(input)
+		if err == nil {
+			t.Fatal("no error on invalid input")
+		}
+	}
+}
+
+func TestUnmarshalIntoNonExistingFile(t *testing.T) {
+	for _, file := range []string{"@./test/nonexisting.json", "@./test/nonexisting.yaml", "@./test/test.toml"} {
+		result := &s{}
+		err := UnmarshalInto(file, result)
+		if err == nil {
+			t.Fatal("no error on non-existing file")
+		}
+		t.Logf("error: %v", err)
+	}
+}
+
+func TestUnmarshalIntoInvalidFile(t *testing.T) {
+	for _, file := range []string{"@./test/invalid.json", "@./test/invalid.yaml"} {
+		result := &s{}
+		err := UnmarshalInto(file, result)
+		if err == nil {
+			t.Fatal("no error on invalid file")
+		}
+	}
+}
+
+func TestUnmarshalIntoInvalidInline(t *testing.T) {
+	inputs := []string{
+		`
+---
+name: John
+surname: "Doe
+age: 23	
+		`,
+		`
+{
+	"name": "John",
+	"surname": "Doe"
+	"age": 23
+}		`,
+	}
+	for _, input := range inputs {
+		result := &s{}
+		err := UnmarshalInto(input, result)
+		if err == nil {
+			t.Fatal("no error on invalid input")
+		}
+	}
+}
+
 func TestUnmarshalStructFromJSONFile(t *testing.T) {
-	input := "@struct.json"
+	input := "@./test/struct.json"
 	result, err := Unmarshal(input)
 	if err != nil {
 		t.Fatalf("error unmarshalling from file: %v", err)
@@ -25,7 +124,7 @@ func TestUnmarshalStructFromJSONFile(t *testing.T) {
 }
 
 func TestUnmarshalArrayFromJSONFile(t *testing.T) {
-	input := "@array.json"
+	input := "@./test/array.json"
 	result, err := Unmarshal(input)
 	if err != nil {
 		t.Fatalf("error unmarshalling from file: %v", err)
@@ -43,7 +142,7 @@ func TestUnmarshalArrayFromJSONFile(t *testing.T) {
 }
 
 func TestUnmarshalStructFromYAMLFile(t *testing.T) {
-	input := "@struct.yaml"
+	input := "@./test/struct.yaml"
 	result, err := Unmarshal(input)
 	if err != nil {
 		t.Fatalf("error unmarshalling from file: %v", err)
@@ -65,7 +164,7 @@ func TestUnmarshalStructFromYAMLFile(t *testing.T) {
 }
 
 func TestUnmarshalArrayFromYAMLFile(t *testing.T) {
-	input := "@array.yaml"
+	input := "@./test/array.yaml"
 	result, err := Unmarshal(input)
 	if err != nil {
 		t.Fatalf("error unmarshalling from file: %v", err)
@@ -184,16 +283,8 @@ func TestUnmarshalArrayFromYAMLInline(t *testing.T) {
 	}
 }
 
-////////////////////
-
-type s struct {
-	Name    string `json:"name"`
-	Surname string `json:"surname"`
-	Age     int    `json:"age"`
-}
-
 func TestUnmarshalIntoStructFromJSONFile(t *testing.T) {
-	input := "@struct.json"
+	input := "@./test/struct.json"
 	result := &s{}
 	err := UnmarshalInto(input, result)
 	if err != nil {
@@ -211,7 +302,7 @@ func TestUnmarshalIntoStructFromJSONFile(t *testing.T) {
 }
 
 func TestUnmarshalIntoArrayFromJSONFile(t *testing.T) {
-	input := "@array.json"
+	input := "@./test/array.json"
 	result := []string{}
 	err := UnmarshalInto(input, &result)
 	if err != nil {
@@ -225,7 +316,7 @@ func TestUnmarshalIntoArrayFromJSONFile(t *testing.T) {
 }
 
 func TestUnmarshalIntoStructFromYAMLFile(t *testing.T) {
-	input := "@struct.yaml"
+	input := "@./test/struct.yaml"
 	result := &s{}
 	err := UnmarshalInto(input, result)
 	if err != nil {
@@ -243,7 +334,7 @@ func TestUnmarshalIntoStructFromYAMLFile(t *testing.T) {
 }
 
 func TestUnmarshalIntoArrayFromYAMLFile(t *testing.T) {
-	input := "@array.yaml"
+	input := "@./test/array.yaml"
 	result := []string{}
 	err := UnmarshalInto(input, &result)
 	if err != nil {

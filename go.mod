@@ -1,4 +1,4 @@
-module github.com/dihedron/unknown
+module github.com/dihedron/rawdata
 
 go 1.17
 
