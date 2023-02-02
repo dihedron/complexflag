@@ -33,7 +33,7 @@ const (
 // accordingly.
 func Unmarshal(value string) (interface{}, error) {
 	// read data and detect its format
-	format, content, err := readContent(value)
+	format, content, err := ReadContent(value)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func Unmarshal(value string) (interface{}, error) {
 // a file (e.g. '@myfile.json') in JSON/YAML format.
 func UnmarshalInto(value string, target interface{}) error {
 	// read data and detect its format
-	format, content, err := readContent(value)
+	format, content, err := ReadContent(value)
 	if err != nil {
 		return err
 	} // now depending on the format, unmarshal to JSON or YAML
@@ -74,7 +74,11 @@ func UnmarshalInto(value string, target interface{}) error {
 	}
 }
 
-func readContent(value string) (Format, []byte, error) {
+// ReadContent reads the data from the given input value,either taken as the
+// literal value to be parsed or as a path to a file (in either JSON or YAML
+// format); it returns the auto-detected data format and the data itself as a
+// byte slice.
+func ReadContent(value string) (Format, []byte, error) {
 	var format Format
 	var content []byte
 	if strings.HasPrefix(value, "@") {
